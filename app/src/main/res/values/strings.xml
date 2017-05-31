@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">AndroidSdkExampleApp</string>
+
+    <string name="start_trip_button">Start trip</string>
+    <string name="complete_task_button">complete task</string>
+    <string name="end_trip_button">End trip</string>
+    <string name="cancel_task_button">cancel task</string>
+    <string name="get_tasks_button">Get tasks</string>
+</resources>
