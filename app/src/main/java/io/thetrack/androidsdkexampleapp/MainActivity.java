@@ -84,7 +84,6 @@ public class MainActivity extends AppCompatActivity  {
 
     private void startTrip() {
         TripParams.TripParamsBuilder tripParamsBuilder = new TripParams.TripParamsBuilder();
-        tripParamsBuilder.setDriverID("YOUR_DRIVER_ID");
         tripParamsBuilder.setTasksIds(mTasks);
         tripParamsBuilder.setVehicleType(DriverModel.VehicleType.CAR);
         tripParamsBuilder.setIsAutoEnded(true);
