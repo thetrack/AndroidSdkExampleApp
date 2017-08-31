@@ -10,10 +10,10 @@
         android:orientation="vertical">
 
         <Button
-            android:id="@+id/startTripButton"
+            android:id="@+id/startTrackingButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/start_trip_button" />
+            android:text="@string/start_tracking_button" />
 
         <Button
             android:id="@+id/completeTaskButton"
@@ -28,10 +28,10 @@
             android:text="@string/cancel_task_button" />
 
         <Button
-            android:id="@+id/endTripButton"
+            android:id="@+id/stopTrackingButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/end_trip_button" />
+            android:text="@string/stop_tracking_button" />
 
         <Button
             android:id="@+id/getTasksButton"

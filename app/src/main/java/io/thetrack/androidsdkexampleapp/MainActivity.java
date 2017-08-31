@@ -1,184 +1,146 @@
 package io.thetrack.androidsdkexampleapp;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import org.jdeferred.DoneCallback;
-import org.jdeferred.FailCallback;
-import org.jdeferred.Promise;
-
-import java.util.ArrayList;
 import java.util.List;
 
-import ru.thetrack.carrier.CarrierTaskModel;
-import ru.thetrack.carrier.CarrierTripModel;
-import ru.thetrack.carrier.ThetrackCarrier;
-import ru.thetrack.carrier.TripParams;
-import ru.thetrack.common.models.DriverModel;
-import ru.thetrack.common.utils.LogUtils;
+import io.thetrack.sdk.DriverParams;
+import io.thetrack.sdk.TheTrack;
+import io.thetrack.sdk.ThetrackCallback;
+import io.thetrack.sdk.data.model.DriverModel;
+import io.thetrack.sdk.data.model.TaskModel;
 
-public class MainActivity extends AppCompatActivity  {
-    private static final String TAG = MainActivity.class.getSimpleName();
 
-    private ThetrackCarrier mCarrier;
-    private List<String> mTasks;
-    private CarrierTripModel mTrip;
+public class MainActivity extends AppCompatActivity {
+    private TheTrack theTrack;
+    private static final String PUBLIC_KEY = "YOUR_PUBLIC_KEY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        String driver_id = "YOUR_DRIVER_ID";
+        theTrack = new TheTrack(PUBLIC_KEY, getApplicationContext());
 
-        mTasks = new ArrayList<>();
-        mTasks.add("YOUR_TASK_ID_1");
-        mTasks.add("YOUR_TASK_ID_2");
+        DriverParams driverParams = new DriverParams.DriverParamsBuilder()
+                .setPhone("+79999999")
+                .setName("DRIVER_NAME")
+                .setLookupID("YOUR_INTERNAL_ID")
+                .create();
 
-        mCarrier = ThetrackCarrier.getInstance("YOUR_PUBLIC_KEY",
-                driver_id, getApplicationContext());
-
-        Button startTripButton = (Button) findViewById(R.id.startTripButton);
-        startTripButton.setOnClickListener(new View.OnClickListener() {
+        theTrack.getOrCreateDriver(driverParams, new ThetrackCallback<DriverModel>() {
             @Override
-            public void onClick(View v) {
-                startTrip();
+            public void onSuccess(@NonNull DriverModel result) {
+                String msg = "Driver received: " + result.id;
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(@NonNull Throwable throwable) {
+                String msg = "Driver receiving error: " + throwable.toString();
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
             }
         });
 
-        Button completeTaskButton = (Button) findViewById(R.id.completeTaskButton);
+        Button startTrackingButton = findViewById(R.id.startTrackingButton);
+        startTrackingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startTracking();
+            }
+        });
+
+        Button completeTaskButton = findViewById(R.id.completeTaskButton);
         completeTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 completeTask();
             }
         });
 
-        Button cancelTaskButton = (Button) findViewById(R.id.cancelTaskButton);
+        Button cancelTaskButton = findViewById(R.id.cancelTaskButton);
         cancelTaskButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 cancelTask();
             }
         });
 
-        Button endTripButton = (Button) findViewById(R.id.endTripButton);
-        endTripButton.setOnClickListener(new View.OnClickListener() {
+        Button stopTrackingButton = findViewById(R.id.stopTrackingButton);
+        stopTrackingButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                endTrip();
+            public void onClick(View view) {
+                stopTracking();
             }
         });
 
-        Button getTasksButton = (Button) findViewById(R.id.getTasksButton);
+        Button getTasksButton = findViewById(R.id.getTasksButton);
         getTasksButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 getTasks();
             }
         });
     }
 
-    private void startTrip() {
-        TripParams.TripParamsBuilder tripParamsBuilder = new TripParams.TripParamsBuilder();
-        tripParamsBuilder.setTasksIds(mTasks);
-        tripParamsBuilder.setVehicleType(DriverModel.VehicleType.CAR);
-        tripParamsBuilder.setIsAutoEnded(true);
-        tripParamsBuilder.setOrderedTasks(false);
-
-        Promise<CarrierTripModel, Exception, Void> promise = mCarrier.startTrip(tripParamsBuilder.create());
-
-        promise.done(new DoneCallback<CarrierTripModel>() {
-            @Override
-            public void onDone(CarrierTripModel trip) {
-                String msg = "TripModel Started: " + trip.getId() + "\n" + "Tasks: " + trip.getTasks().toString();
-                LogUtils.Logger.d(TAG, msg);
-                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-                mTrip = trip;
-            }
-        });
-
-        promise.fail(new FailCallback<Exception>() {
-            @Override
-            public void onFail(Exception result) {
-                LogUtils.Logger.d(TAG, "Can't stat trip", result);
-                Toast.makeText(getApplicationContext(), result.toString(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void startTracking() {
+        theTrack.startTracking();
     }
 
-    private void endTrip() {
-        Promise<CarrierTripModel, Exception, Void> promise = mCarrier.endTrip();
-
-        promise.done(new DoneCallback<CarrierTripModel>() {
-            @Override
-            public void onDone(CarrierTripModel trip) {
-                String msg = "Trip ended: " + trip.getId();
-                LogUtils.Logger.d(TAG, msg);
-                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-                mTrip = trip;
-            }
-        }).fail(new FailCallback<Exception>() {
-            @Override
-            public void onFail(Exception result) {
-                String msg = "Trip ended fail: " + result.toString();
-                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-                LogUtils.Logger.d(TAG, msg);
-            }
-        });
+    private void stopTracking() {
+        theTrack.stopTracking();
     }
 
     private void completeTask() {
-        Promise<CarrierTaskModel, Exception, Void> promise = mCarrier.completeCurrentTask();
-
-        promise.done(new DoneCallback<CarrierTaskModel>() {
+        theTrack.completeCurrentTask(new ThetrackCallback<TaskModel>() {
             @Override
-            public void onDone(CarrierTaskModel task) {
-                String msg = "TaskModel completed: " + task.getTaskId() + " Status: " + task.getStatus();
+            public void onSuccess(@NonNull TaskModel result) {
+                String msg = "Task complete success" + result.id;
                 Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
-                LogUtils.Logger.d(TAG, msg);
             }
-        });
 
-        promise.fail(new FailCallback<Exception>() {
             @Override
-            public void onFail(Exception result) {
-                String msg = "TaskModel complete error" + result.toString();
-                LogUtils.Logger.e(TAG, msg);
+            public void onError(@NonNull Throwable throwable) {
+                throwable.printStackTrace();
+                String msg = "!!!Task complete ERROR";
                 Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
             }
         });
     }
 
     private void cancelTask() {
-        Promise<CarrierTaskModel, Exception, Void> promise = mCarrier.cancelCurrentTask();
-
-        promise.done(new DoneCallback<CarrierTaskModel>() {
+        theTrack.cancelCurrentTask(new ThetrackCallback<TaskModel>() {
             @Override
-            public void onDone(CarrierTaskModel task) {
-                String msg = "TaskModel canceled: " + task.getTaskId() + " Status: " + task.getStatus();
+            public void onSuccess(@NonNull TaskModel result) {
+                String msg = "Task cancel success" + result.id;
                 Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
-                LogUtils.Logger.d(TAG, msg);
             }
-        });
 
-        promise.fail(new FailCallback<Exception>() {
             @Override
-            public void onFail(Exception result) {
-                String msg = "TaskModel cancel error" + result.toString();
-                LogUtils.Logger.e(TAG, msg);
+            public void onError(@NonNull Throwable throwable) {
+                throwable.printStackTrace();
+                String msg = "!!!Task cancel ERROR";
                 Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
             }
         });
     }
 
     private void getTasks() {
-        ArrayList<CarrierTaskModel> tasks = mCarrier.getTasks(null);
-        String msg = "Tasks: " + tasks.toString();
-        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
-        LogUtils.Logger.d(TAG, msg);
+        theTrack.getTasks(new ThetrackCallback<List<TaskModel>>() {
+            @Override
+            public void onSuccess(@NonNull List<TaskModel> result) {
+                Toast.makeText(getApplicationContext(), result.get(0).status.toString(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(@NonNull Throwable throwable) {
+                Toast.makeText(getApplicationContext(), throwable.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
