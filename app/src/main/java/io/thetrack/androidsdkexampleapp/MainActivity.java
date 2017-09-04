@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        theTrack = new TheTrack(PUBLIC_KEY, getApplicationContext());
+        theTrack = TheTrack.getInstance(PUBLIC_KEY, getApplicationContext());
 
         DriverParams driverParams = new DriverParams.DriverParamsBuilder()
                 .setPhone("+79999999")
@@ -89,11 +89,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startTracking() {
-        theTrack.startTracking();
+        theTrack.startTracking(new ThetrackCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                String msg = "Tracking is on";
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(@NonNull Throwable throwable) {
+                String msg = "Start tracking ERROR: " + throwable;
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void stopTracking() {
-        theTrack.stopTracking();
+        theTrack.stopTracking(new ThetrackCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                String msg = "Tracking is off";
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(@NonNull Throwable throwable) {
+                String msg = "Stop tracking ERROR: " + throwable;
+                Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void completeTask() {
@@ -107,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onError(@NonNull Throwable throwable) {
                 throwable.printStackTrace();
-                String msg = "!!!Task complete ERROR";
+                String msg = "Task complete ERROR: " + throwable;
                 Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
             }
         });
@@ -124,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onError(@NonNull Throwable throwable) {
                 throwable.printStackTrace();
-                String msg = "!!!Task cancel ERROR";
+                String msg = "Task cancel ERROR: " + throwable;
                 Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
             }
         });
@@ -134,7 +158,12 @@ public class MainActivity extends AppCompatActivity {
         theTrack.getTasks(new ThetrackCallback<List<TaskModel>>() {
             @Override
             public void onSuccess(@NonNull List<TaskModel> result) {
-                Toast.makeText(getApplicationContext(), result.get(0).status.toString(), Toast.LENGTH_SHORT).show();
+                if (result.isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "No tasks", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Toast.makeText(getApplicationContext(), result.get(0).status.toString(),
+                        Toast.LENGTH_SHORT).show();
             }
 
             @Override
