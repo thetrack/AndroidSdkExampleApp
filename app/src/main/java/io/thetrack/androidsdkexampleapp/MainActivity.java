@@ -1,5 +1,8 @@
 package io.thetrack.androidsdkexampleapp;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -89,6 +92,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startTracking() {
+        if (!theTrack.checkPermissions()){
+            theTrack.requestPermissions(this);
+            return;
+        }
+
+        if (!theTrack.checkLocationSettings()) {
+            theTrack.requestLocationSettings(this);
+            return;
+        }
+
         theTrack.startTracking(new ThetrackCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
@@ -171,5 +184,31 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), throwable.toString(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == TheTrack.LOCATION_PERMISSION_ID
+                && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startTracking();
+        } else {
+            Toast.makeText(this, "Location Permission denied.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == TheTrack.LOCATION_SERVICE_ID) {
+            if (resultCode == Activity.RESULT_OK) {
+                startTracking();
+            } else {
+                // Handle Enable Location Services request denied error
+                Toast.makeText(this, "Enable Location Services request denied.", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }
